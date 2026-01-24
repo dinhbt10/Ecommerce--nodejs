@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const KeyTokenService = require("./keyToken.service");
 const { createTokenPair } = require("../auth/authUtils");
 const { getInfoData } = require("../utils");
+const { BadRequestErrorResponse } = require("../core/error.response");
 
 const roles = {
   SHOP: 'SHOP',
@@ -15,19 +16,34 @@ const roles = {
 }
 
 class AccessService {
+
+  /**
+   * 1 - Kiểm tra email trong cơ sở dữ liệu
+   * 2 - So sánh mật khẩu
+   * 3 - Tạo access token và refresh token
+   * 4 - Tạo key token và lưu vào cơ sở dữ liệu
+   * 5 - Trả access token và refresh token cho client
+   */
+  static login = async () => {
+
+  }
+
+  // Đăng ký tài khoản Shop
+  // Bước 1: Kiểm tra email đã tồn tại trong hệ thống
+  // Bước 2: Hash mật khẩu bằng bcrypt để bảo vệ dữ liệu
+  // Bước 3: Tạo bản ghi Shop mới với vai trò mặc định 'SHOP'
+  // Bước 4: Sinh cặp khóa (privateKey/publicKey) và lưu vào KeyToken để quản lý xác thực
+  // Bước 5: Tạo cặp JWT (accessToken/refreshToken) cho phiên đăng nhập đầu tiên
+  // Bước 6: Chuẩn hóa dữ liệu trả về (chỉ _id, name, email) kèm tokens
   static signUp = async ({ name, email, password }) => {
     try {
       const holderShop = await shopModel.findOne({ email }).lean();
       
       if (holderShop) {
-        return {
-          code: 'xxxxx',
-          message: 'Email already exists',
-        };
+        throw new BadRequestErrorResponse('Email already exists')
       }
-      //Hash password before storing it in the database to enhance security
+
       const hashedPassword = await bcrypt.hash(password, 10);
-      // step1: check email exists??
       const newShop = await shopModel.create({
         name,
         email,
@@ -36,7 +52,6 @@ class AccessService {
       });
 
       if (newShop) {
-        // Tạo các khóa bí mật và công khai với thuật toán RSA
         const privateKey = crypto.randomBytes(64).toString('hex');
         const publicKey = crypto.randomBytes(64).toString('hex');
 
@@ -47,13 +62,9 @@ class AccessService {
         });
 
         if (!keyStore) {
-          return {
-            code: 'xxxx',
-            message: 'Error creating key token',
-          };
+          throw new BadRequestErrorResponse('Error creating key token')
         }
 
-        // create token pair
         const tokens = await createTokenPair({ userId: newShop._id, email }, publicKey, privateKey);
         return {
           code: 201,  

@@ -52,7 +52,14 @@ const permissions = ( permission ) => {
     }
 }
 
+const asycHandler = (fn) => {
+    return (req, res, next) => {
+        fn(req, res, next).catch(next);
+    }
+}
+
 module.exports = {
     apiKey,
-    permissions
+    permissions,
+    asycHandler
 }
