@@ -21,15 +21,19 @@ const keyTokenSchema = new Schema(
       type: String,
       required: true,
     },
-    refreshToken: {
+    refreshTokensUsed: {
       type: Array,
       default: [],
+    },
+    refreshToken: {
+      type: String,
+      required: true,
     },
   },
   {
     timestamps: true,
     collection: COLLECTION_NAME,
-  }
+  },
 );
 
 module.exports = model(DOCUMENT_NAME, keyTokenSchema);
