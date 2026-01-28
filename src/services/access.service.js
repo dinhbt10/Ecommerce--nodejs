@@ -17,6 +17,10 @@ const roles = {
 };
 
 class AccessService {
+  static logout = async (keyStore) => {
+    return await KeyTokenService.removeKeyById(keyStore._id);
+  };
+
   /**
    * 1 - Kiểm tra email trong cơ sở dữ liệu
    * 2 - So sánh mật khẩu
