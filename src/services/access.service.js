@@ -4,9 +4,12 @@ const shopModel = require("../models/shop.model");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const KeyTokenService = require("./keyToken.service");
-const { createTokenPair } = require("../auth/authUtils");
+const { createTokenPair, verifyJWT } = require("../auth/authUtils");
 const { getInfoData } = require("../utils");
-const { BadRequestErrorResponse } = require("../core/error.response");
+const {
+  BadRequestErrorResponse,
+  ForbiddenErrorResponse,
+} = require("../core/error.response");
 const { findByEmail } = require("./shop.service");
 
 const roles = {
@@ -17,10 +20,59 @@ const roles = {
 };
 
 class AccessService {
+  static handlerRefreshToken = async (refreshToken) => {
+    const foundToken =
+      await KeyTokenService.findByRefreshTokenUsed(refreshToken);
+
+    if (foundToken) {
+      await KeyTokenService.removeKeyById(foundToken._id);
+      throw new ForbiddenErrorResponse(
+        "Something went wrong!! Pls login again",
+      );
+    }
+
+    const hoderToken = await KeyTokenService.findByRefreshToken(refreshToken);
+    if (!hoderToken) {
+      throw new AuthFailureError("Something went wrong!! Pls login again");
+    }
+
+    const { userId, email } = await verifyJWT(
+      refreshToken,
+      hoderToken.privateKey,
+    );
+
+    const foundShop = await findByEmail({ email });
+    if (!foundShop) {
+      throw new AuthFailureError("Something went wrong!! Pls login again");
+    }
+
+    const tokens = await createTokenPair(
+      { userId, email },
+      hoderToken.publicKey,
+      hoderToken.privateKey,
+    );
+
+    await hoderToken.updateOne({
+      $set: {
+        refreshToken: tokens.refreshToken,
+      },
+      $addToSet: {
+        refreshTokensUsed: refreshToken,
+      },
+    });
+
+    return {
+      user: {
+        userId,
+        email,
+      },
+      tokens,
+    };
+  };
+
   static logout = async (keyStore) => {
     return await KeyTokenService.removeKeyById(keyStore._id);
   };
-
   /**
    * 1 - Kiểm tra email trong cơ sở dữ liệu
    * 2 - So sánh mật khẩu
