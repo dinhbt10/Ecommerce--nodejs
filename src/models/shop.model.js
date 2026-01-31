@@ -2,7 +2,7 @@
 
 const mongoose = require("mongoose");
 
-const { model, Schema, Types } = mongoose;
+const { model, Schema } = mongoose;
 
 const DOCUMENT_NAME = "Shop";
 const COLLECTION_NAME = "shops";
@@ -40,7 +40,7 @@ const shopSchema = new Schema(
   {
     timestamps: true,
     collection: COLLECTION_NAME,
-  }
+  },
 );
 
 module.exports = model(DOCUMENT_NAME, shopSchema);
