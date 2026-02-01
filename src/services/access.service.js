@@ -65,31 +65,21 @@ class AccessService {
   static logout = async (keyStore) => {
     return await KeyTokenService.removeKeyById(keyStore._id);
   };
-  /**
-   * 1 - Kiểm tra email trong cơ sở dữ liệu
-   * 2 - So sánh mật khẩu
-   * 3 - Tạo access token và refresh token
-   * 4 - Tạo key token và lưu vào cơ sở dữ liệu
-   * 5 - Trả access token và refresh token cho client
-   */
+
   static login = async ({ email, password, refreshToken = null }) => {
-    //1
     const foundShop = await findByEmail({ email });
     if (!foundShop) {
       throw new BadRequestErrorResponse("Shop not registered");
     }
 
-    //2
     const matchPassword = await bcrypt.compare(password, foundShop.password);
     if (!matchPassword) {
       throw new BadRequestErrorResponse("Authentication failed");
     }
 
-    //3
     const privateKey = crypto.randomBytes(64).toString("hex");
     const publicKey = crypto.randomBytes(64).toString("hex");
 
-    //4
     const tokens = await createTokenPair(
       { userId: foundShop._id, email },
       publicKey,
@@ -112,13 +102,6 @@ class AccessService {
     };
   };
 
-  // Đăng ký tài khoản Shop
-  // Bước 1: Kiểm tra email đã tồn tại trong hệ thống
-  // Bước 2: Hash mật khẩu bằng bcrypt để bảo vệ dữ liệu
-  // Bước 3: Tạo bản ghi Shop mới với vai trò mặc định 'SHOP'
-  // Bước 4: Sinh cặp khóa (privateKey/publicKey) và lưu vào KeyToken để quản lý xác thực
-  // Bước 5: Tạo cặp JWT (accessToken/refreshToken) cho phiên đăng nhập đầu tiên
-  // Bước 6: Chuẩn hóa dữ liệu trả về (chỉ _id, name, email) kèm tokens
   static signUp = async ({ name, email, password }) => {
     try {
       const holderShop = await shopModel.findOne({ email }).lean();
