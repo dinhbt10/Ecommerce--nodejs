@@ -20,26 +20,21 @@ const roles = {
 };
 
 class AccessService {
-  static handlerRefreshToken = async (refreshToken) => {
-    const foundToken =
-      await KeyTokenService.findByRefreshTokenUsed(refreshToken);
+  static handlerRefreshToken = async ({ refreshToken, user, keyStore }) => {
+    const { userId, email } = user;
 
-    if (foundToken) {
-      await KeyTokenService.removeKeyById(foundToken._id);
+    if (keyStore.refreshTokensUsed.includes(refreshToken)) {
+      await KeyTokenService.removeKeyById(keyStore._id);
       throw new ForbiddenErrorResponse(
         "Something went wrong!! Pls login again",
       );
     }
 
-    const hoderToken = await KeyTokenService.findByRefreshToken(refreshToken);
-    if (!hoderToken) {
-      throw new AuthFailureError("Something went wrong!! Pls login again");
+    if (keyStore.refreshToken !== refreshToken) {
+      throw new ForbiddenErrorResponse(
+        "Something went wrong!! Pls login again",
+      );
     }
-
-    const { userId, email } = await verifyJWT(
-      refreshToken,
-      hoderToken.privateKey,
-    );
 
     const foundShop = await findByEmail({ email });
     if (!foundShop) {
@@ -48,11 +43,11 @@ class AccessService {
 
     const tokens = await createTokenPair(
       { userId, email },
-      hoderToken.publicKey,
-      hoderToken.privateKey,
+      keyStore.publicKey,
+      keyStore.privateKey,
     );
 
-    await hoderToken.updateOne({
+    await keyStore.updateOne({
       $set: {
         refreshToken: tokens.refreshToken,
       },
@@ -62,10 +57,7 @@ class AccessService {
     });
 
     return {
-      user: {
-        userId,
-        email,
-      },
+      user,
       tokens,
     };
   };

@@ -59,6 +59,10 @@ const clothingSchema = new Schema(
     material: {
       type: String,
     },
+    product_shop: {
+      type: Schema.Types.ObjectId,
+      ref: "Shop",
+    },
   },
   {
     collection: "Clothes",
@@ -78,6 +82,10 @@ const electronicSchema = new Schema(
     color: {
       type: String,
     },
+    product_shop: {
+      type: Schema.Types.ObjectId,
+      ref: "Shop",
+    },
   },
   {
     collection: "electronics",
@@ -86,7 +94,7 @@ const electronicSchema = new Schema(
 );
 
 module.exports = {
-  Product: model(DOCUMENT_NAME, productSchema),
-  Clothing: model("Clothing", clothingSchema),
-  Electronics: model("Electronics", electronicSchema),
+  product: model(DOCUMENT_NAME, productSchema),
+  clothing: model("Clothing", clothingSchema),
+  electronics: model("Electronics", electronicSchema),
 };
