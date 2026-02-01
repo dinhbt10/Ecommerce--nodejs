@@ -17,16 +17,17 @@ app.use("", require("./routes"));
 
 //handling error
 app.use((req, res, next) => {
-    const error = new Error('Not found');
-    error.status = 404;
-    next(error);
-})
+  const error = new Error("Not found");
+  error.status = 404;
+  next(error);
+});
 
 app.use((error, req, res, next) => {
-    const statusCode = error.status || 500;
-    return res.status(statusCode).json({
-        statusCode, 
-        message: error.message || 'Internal Server Error',
-    })
-})
+  const statusCode = error.status || 500;
+  return res.status(statusCode).json({
+    statusCode,
+    stack: error.stack,
+    message: error.message || "Internal Server Error",
+  });
+});
 module.exports = app;
