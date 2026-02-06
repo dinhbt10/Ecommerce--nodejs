@@ -2,6 +2,13 @@
 
 const { BadRequestErrorResponse } = require("../core/error.response");
 const {
+  findAllDraftForShop,
+  publishProductByShop,
+  findAllPublishedForShop,
+  unPublishProductByShop,
+  searchProductByUser,
+} = require("../models/repositories/product.repo");
+const {
   product,
   clothing,
   electronics,
@@ -21,6 +28,36 @@ class ProductFactory {
       throw new BadRequestErrorResponse(`Product type not found ${type}`);
     }
     return new productClass(payload).createProduct();
+  }
+
+  static async publishProductByShop({ product_shop, product_id }) {
+    return await publishProductByShop({ product_shop, product_id });
+  }
+
+  static async unPublishProductByShop({ product_shop, product_id }) {
+    return await unPublishProductByShop({ product_shop, product_id });
+  }
+
+  static async findAllDraftForShop({ product_shop, limit = 50, skip = 0 }) {
+    const query = { product_shop, isDraft: true };
+    return await findAllDraftForShop({
+      query,
+      limit,
+      skip,
+    });
+  }
+
+  static async findAllPublishedForShop({ product_shop, limit = 50, skip = 0 }) {
+    const query = { product_shop, isPublished: true };
+    return await findAllPublishedForShop({
+      query,
+      limit,
+      skip,
+    });
+  }
+
+  static async getListSearchProduct({ keySearch }) {
+    return await searchProductByUser({ keySearch });
   }
 }
 
