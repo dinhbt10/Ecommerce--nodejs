@@ -9,7 +9,9 @@ const {
   searchProductByUser,
   findAllProducts,
   findProduct,
+  updateProductById,
 } = require("../models/repositories/product.repo");
+const { removeUndefinedObject, updateNestedObjectParser } = require("../utils");
 const {
   product,
   clothing,
@@ -32,12 +34,12 @@ class ProductFactory {
     return new productClass(payload).createProduct();
   }
 
-  static async updateProduct(type, payload) {
+  static async updateProduct(type, productId, payload) {
     const productClass = ProductFactory.productRegistry[type];
     if (!productClass) {
       throw new BadRequestErrorResponse(`Product type not found ${type}`);
     }
-    return new productClass(payload).createProduct();
+    return new productClass(payload).updateProduct(productId);
   }
 
   static async publishProductByShop({ product_shop, product_id }) {
@@ -123,6 +125,14 @@ class Product {
       _id: productId,
     });
   }
+
+  async updateProduct(productId, bodyUpdate) {
+    return await updateProductById({
+      productId,
+      bodyUpdate,
+      model: product,
+    });
+  }
 }
 
 class Clothing extends Product {
@@ -138,6 +148,24 @@ class Clothing extends Product {
     if (!newProduct) throw new BadRequestErrorResponse("Product create failed");
 
     return newProduct;
+  }
+
+  async updateProduct(productId) {
+    const objectPram = removeUndefinedObject(this);
+
+    if (objectPram.product_attributes) {
+      await updateProductById({
+        productId,
+        bodyUpdate: updateNestedObjectParser(objectPram.product_attributes),
+        model: clothing,
+      });
+    }
+
+    const updateProduct = await super.updateProduct(
+      productId,
+      updateNestedObjectParser(objectPram),
+    );
+    return updateProduct;
   }
 }
 
@@ -155,6 +183,24 @@ class Electronics extends Product {
 
     return newProduct;
   }
+
+  async updateProduct(productId) {
+    const objectPram = removeUndefinedObject(this);
+
+    if (objectPram.product_attributes) {
+      await updateProductById({
+        productId,
+        bodyUpdate: updateNestedObjectParser(objectPram.product_attributes),
+        model: electronics,
+      });
+    }
+
+    const updateProduct = await super.updateProduct(
+      productId,
+      updateNestedObjectParser(objectPram),
+    );
+    return updateProduct;
+  }
 }
 
 class Furniture extends Product {
@@ -170,6 +216,24 @@ class Furniture extends Product {
     if (!newProduct) throw new BadRequestErrorResponse("Product create failed");
 
     return newProduct;
+  }
+
+  async updateProduct(productId) {
+    const objectPram = removeUndefinedObject(this);
+
+    if (objectPram.product_attributes) {
+      await updateProductById({
+        productId,
+        bodyUpdate: updateNestedObjectParser(objectPram.product_attributes),
+        model: furniture,
+      });
+    }
+
+    const updateProduct = await super.updateProduct(
+      productId,
+      updateNestedObjectParser(objectPram),
+    );
+    return updateProduct;
   }
 }
 

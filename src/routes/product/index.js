@@ -20,6 +20,7 @@ router.use(authentication);
 
 //create product
 router.post("", asycHandler(productController.createProduct));
+router.patch("/:productId", asycHandler(productController.updateProduct));
 router.post(
   "/publish/:id",
   asycHandler(productController.publishProductByShop),
