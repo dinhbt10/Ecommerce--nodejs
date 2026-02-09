@@ -7,6 +7,8 @@ const {
   findAllPublishedForShop,
   unPublishProductByShop,
   searchProductByUser,
+  findAllProducts,
+  findProduct,
 } = require("../models/repositories/product.repo");
 const {
   product,
@@ -23,6 +25,14 @@ class ProductFactory {
   }
 
   static async createProduct(type, payload) {
+    const productClass = ProductFactory.productRegistry[type];
+    if (!productClass) {
+      throw new BadRequestErrorResponse(`Product type not found ${type}`);
+    }
+    return new productClass(payload).createProduct();
+  }
+
+  static async updateProduct(type, payload) {
     const productClass = ProductFactory.productRegistry[type];
     if (!productClass) {
       throw new BadRequestErrorResponse(`Product type not found ${type}`);
@@ -58,6 +68,31 @@ class ProductFactory {
 
   static async getListSearchProduct({ keySearch }) {
     return await searchProductByUser({ keySearch });
+  }
+
+  static async findAllProducts({
+    limit = 50,
+    sort = "ctime",
+    page = 1,
+    filter = { isPublished: true },
+  }) {
+    return await findAllProducts({
+      limit,
+      sort,
+      page,
+      filter,
+      select: [
+        "product_name",
+        "product_thumb",
+        "product_price",
+        "product_quantity",
+        "product_description",
+      ],
+    });
+  }
+
+  static async findProduct({ product_id }) {
+    return await findProduct({ product_id, unSelect: ["__v"] });
   }
 }
 

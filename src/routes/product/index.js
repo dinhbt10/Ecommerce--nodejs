@@ -12,6 +12,9 @@ router.get(
   asycHandler(productController.getListSearchProduct),
 );
 
+router.get("", asycHandler(productController.findAllProducts));
+router.get("/:product_id", asycHandler(productController.findProduct));
+
 //signup
 router.use(authentication);
 
