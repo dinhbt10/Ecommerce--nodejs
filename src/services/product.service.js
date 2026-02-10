@@ -1,6 +1,7 @@
 "use strict";
 
 const { BadRequestErrorResponse } = require("../core/error.response");
+const { insertInventory } = require("../models/repositories/inventory.repo");
 const {
   findAllDraftForShop,
   publishProductByShop,
@@ -120,10 +121,20 @@ class Product {
   }
 
   async createProduct(productId) {
-    return await product.create({
+    const newProduct = await product.create({
       ...this,
       _id: productId,
     });
+
+    if (newProduct) {
+      await insertInventory({
+        productId: newProduct._id,
+        shopId: this.product_shop,
+        stock: this.product_quantity,
+      });
+    }
+
+    return newProduct;
   }
 
   async updateProduct(productId, bodyUpdate) {
